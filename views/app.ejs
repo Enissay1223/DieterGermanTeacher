@@ -1,0 +1,34 @@
+<% const badge = (lang) => lang === 'french' ? '🇫🇷' : lang === 'arabic' ? '🇸🇦' : '🇬🇧'; %>
+<% const header = `<div class=\"card\"><h2>👤 ${data.user.name || 'Unbekannt'} <span class=\"pill\">${data.user.german_level || 'A1'}</span> <span class=\"pill\">${badge(data.user.preferred_language)} ${data.user.preferred_language}</span></h2><div class=\"muted\">${data.user.phone_number}</div></div>` %>
+<%- include('layout', { title: 'Mein Dashboard', body: `
+  ${header}
+  <div class=\"card\">
+    <div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px\">
+      <div><div class=\"muted\">Erfahrung</div><div style=\"font-size:28px;font-weight:700\">${data.user.experience_points || 0} XP</div></div>
+      <div><div class=\"muted\">Lektionen</div><div style=\"font-size:28px;font-weight:700\">${data.user.lessons_completed || 0}</div></div>
+      <div><div class=\"muted\">Letzte Aktivität</div><div style=\"font-size:20px;font-weight:600\">${new Date(data.user.last_active).toLocaleDateString('de-DE')}</div></div>
+    </div>
+  </div>
+
+  <div class=\"card\"> 
+    <h3>🌍 Sprache ändern</h3>
+    <a class=\"btn\" href=\"/dashboard/me?phone=${encodeURIComponent(phone)}&token=${token}&setLang=en\">English</a>
+    <a class=\"btn\" href=\"/dashboard/me?phone=${encodeURIComponent(phone)}&token=${token}&setLang=fr\">Français</a>
+    <a class=\"btn\" href=\"/dashboard/me?phone=${encodeURIComponent(phone)}&token=${token}&setLang=ar\">العربية</a>
+  </div>
+
+  <div class=\"card\">
+    <h3>📚 Kurse (A1–B2)</h3>
+    <div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px\">
+      ${courses.map(c => `
+        <div class=\"card\" style=\"margin:0\">
+          <div style=\"display:flex;justify-content:space-between;align-items:center\"><div><strong>${c.title}</strong><span class=\"pill\">${c.level}</span></div>${c.content_url ? `<a class=\\\"btn\\\" href=\\\"${c.content_url}\\\" target=\\\"_blank\\\">Öffnen</a>` : ''}</div>
+          <div class=\"muted\">${c.description || ''}</div>
+          <div style=\"height:10px;background:#e9ecef;border-radius:6px;overflow:hidden\"><div style=\"height:100%;background:linear-gradient(90deg,#28a745,#20c997);width:${Math.max(0, Math.min(100, c.progress || 0))}%\"></div></div>
+          <div class=\"muted\">${c.progress || 0}% • ${c.status}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+` }) %>
+

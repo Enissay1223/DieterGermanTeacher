@@ -1,0 +1,47 @@
+<%- include('layout', { title: 'Admin Panel', body: `
+  <div class=\"card\"><h1>🔧 Admin Panel</h1>
+    <a class=\"btn\" href=\"/dashboard\">📊 Dashboard</a>
+    <a class=\"btn\" href=\"/admin/courses\">📚 Kurse</a>
+  </div>
+  <div class=\"card\" style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px\">
+    <div><div class=\"muted\">Wartende</div><div style=\"font-size:28px;font-weight:700\">${stats.pending_count}</div></div>
+    <div><div class=\"muted\">Aktive</div><div style=\"font-size:28px;font-weight:700\">${stats.approved_count}</div></div>
+    <div><div class=\"muted\">Gesamt</div><div style=\"font-size:28px;font-weight:700\">${stats.total_users}</div></div>
+    <div><div class=\"muted\">Lektionen</div><div style=\"font-size:28px;font-weight:700\">${stats.total_lessons}</div></div>
+  </div>
+
+  <h2>⏳ Wartende Anmeldungen</h2>
+  ${pendingUsers.length === 0 ? '<div class=\"card\">Keine wartenden Anmeldungen</div>' : ''}
+  ${pendingUsers.map(user => `
+    <div class=\"card\">
+      <strong>${user.name || 'Unbekannt'}</strong> <span class=\"pill\">${user.preferred_language}</span>
+      <div class=\"muted\">${user.phone_number}</div>
+      <button class=\"btn\" onclick=\"approveUser('${user.phone_number}')\">✅ Genehmigen</button>
+      <button class=\"btn\" style=\"background:#dc3545\" onclick=\"rejectUser('${user.phone_number}')\">❌ Ablehnen</button>
+    </div>
+  `).join('')}
+
+  <h2>✅ Aktive Nutzer</h2>
+  ${activeUsers.map(user => `
+    <div class=\"card\">
+      <strong>${user.name || 'Unbekannt'}</strong> <span class=\"pill\">${user.german_level || 'A1'}</span>
+      <div class=\"muted\">${user.phone_number}</div>
+      <div>${user.experience_points || 0} XP • Lektionen: ${user.lessons_completed || 0}</div>
+    </div>
+  `).join('')}
+
+  <script>
+    function approveUser(phone){
+      const password = prompt('Admin-Passwort'); if(!password) return;
+      fetch('/admin/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,password})})
+      .then(r=>r.json()).then(d=>{ if(d.success) location.reload(); else alert(d.error || 'Fehler'); });
+    }
+    function rejectUser(phone){
+      const password = prompt('Admin-Passwort'); if(!password) return;
+      if(!confirm('Sicher ablehnen?')) return;
+      fetch('/admin/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,password})})
+      .then(r=>r.json()).then(d=>{ if(d.success) location.reload(); else alert(d.error || 'Fehler'); });
+    }
+  </script>
+` }) %>
+

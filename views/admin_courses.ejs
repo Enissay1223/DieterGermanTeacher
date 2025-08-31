@@ -1,0 +1,24 @@
+<%- include('layout', { title: 'Kurse', body: `
+  <div class=\"card\"><h1>📚 Kursverwaltung</h1>
+    <a class=\"btn\" href=\"/admin\">⬅️ Zurück</a>
+  </div>
+  <div class=\"card\">
+    <h3>Import (JSON Array)</h3>
+    <form method=\"post\" action=\"/admin/courses/import\"> 
+      <input name=\"password\" type=\"password\" placeholder=\"Admin-Passwort\" required />
+      <br/><br/>
+      <textarea name=\"payload\" style=\"width:100%;height:200px\" placeholder='[{"code":"A1-01","level":"A1","title":"Einführung"}]'></textarea>
+      <br/>
+      <button class=\"btn\" type=\"submit\">Importieren / Aktualisieren</button>
+    </form>
+  </div>
+  <div class=\"card\">
+    <h3>Veröffentlichte Kurse (<%= courses.length %>)</h3>
+    <ul>
+      <% courses.forEach(c => { %>
+        <li><strong><%= c.code %></strong> [<%= c.level %>] - <%= c.title %></li>
+      <% }) %>
+    </ul>
+  </div>
+` }) %>
+
