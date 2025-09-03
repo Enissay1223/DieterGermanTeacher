@@ -74,19 +74,25 @@ function systemPrompt(userLanguage, userLevel, trainingData) {
   return `You are a professional DaF/DaZ teacher.\nUSER LANGUAGE: ${userLanguage}\nGERMAN LEVEL: ${userLevel}\nTRAINING DATA:\n${trainingData || ''}\nAlways reply in the user's language.`;
 }
 
-function createAIService(openaiClient, mistralKey) {
-  const router = new SmartAPIRouter(openaiClient, mistralKey);
-  let training = '';
+class AIService {
+  constructor() {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+    this.router = new SmartAPIRouter(this.openai, process.env.MISTRAL_API_KEY);
+    this.training = '';
+    this.loadTrainingData();
+  }
 
-  async function loadTrainingData() {
+  async loadTrainingData() {
     try {
-      training = await fs.readFile('./training_data.txt', 'utf8');
+      this.training = await fs.readFile('./training_data.txt', 'utf8');
     } catch {
-      training = 'Standard DaF/DaZ Wissen';
+      this.training = 'Standard DaF/DaZ Wissen';
     }
   }
 
-  async function getAIResponse(userMessage, phoneNumber) {
+  async getAIResponse(userMessage, phoneNumber) {
     const user = await getOrCreateUser(phoneNumber);
     if (user.status !== 'approved') {
       return {
@@ -101,13 +107,13 @@ function createAIService(openaiClient, mistralKey) {
 
     await updateLastActive(phoneNumber);
     const context = { language: user.preferred_language || 'english', level: user.german_level || 'A1' };
-    const complexity = router.analyzeComplexity(userMessage, context);
-    const selected = router.selectModel(complexity, context);
+    const complexity = this.router.analyzeComplexity(userMessage);
+    const selected = this.router.selectModel(complexity);
     const messages = [
-      { role: 'system', content: systemPrompt(context.language, context.level, training) },
+      { role: 'system', content: systemPrompt(context.language, context.level, this.training) },
       { role: 'user', content: userMessage }
     ];
-    const content = await router.callAPI(messages, selected);
+    const content = await this.router.callAPI(messages, selected);
 
     let points = 10;
     if (selected.provider === 'openai' && selected.model === 'gpt-4o-mini') points = 15;
@@ -120,9 +126,7 @@ function createAIService(openaiClient, mistralKey) {
 
     return { text: content, meta: { complexity, model: selected } };
   }
-
-  return { loadTrainingData, getAIResponse };
 }
 
-module.exports = { createAIService };
+module.exports = { AIService };
 
