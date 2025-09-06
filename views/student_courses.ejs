@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>👨‍🎓 Kurse - Deutschlehrer Bot</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;background:#f5f5f5}
+    .container{max-width:1200px;margin:0 auto;padding:20px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:20px;margin-bottom:20px}
+    .btn{display:inline-block;background:#007bff;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;margin-right:8px;margin-bottom:8px}
+    .btn-success{background:#28a745}
+    .btn-warning{background:#ffc107;color:#000}
+    .muted{color:#666}
+    .pill{display:inline-block;padding:2px 10px;border-radius:14px;background:#e9ecef;margin-left:8px;font-weight:600}
+    .courses-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin:20px 0}
+    .course-card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:20px;transition:transform 0.2s}
+    .course-card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.12)}
+    .course-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+    .course-title{font-size:1.3em;font-weight:600;color:#333;margin:0}
+    .course-level{font-size:0.9em;color:#666}
+    .course-description{color:#666;line-height:1.5;margin-bottom:20px}
+    .course-meta{display:flex;justify-content:space-between;align-items:center}
+    .course-stats{display:flex;gap:15px;color:#666;font-size:0.9em}
+    .hero{text-align:center;padding:40px 20px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border-radius:15px;margin-bottom:30px}
+    .hero h1{font-size:2.5em;margin-bottom:15px}
+    .hero p{font-size:1.2em;opacity:0.9}
+    .level-filter{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}
+    .filter-btn{background:#fff;border:2px solid #007bff;color:#007bff;padding:8px 16px;border-radius:20px;cursor:pointer;transition:all 0.2s}
+    .filter-btn.active{background:#007bff;color:white}
+    .filter-btn:hover{background:#007bff;color:white}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero Section -->
+    <div class="hero">
+      <h1>🇩🇪 Deutsch lernen leicht gemacht</h1>
+      <p>Entdecke alle verfügbaren Kurse und starte deine Reise zur deutschen Sprache</p>
+      <div>
+        <a class="btn" href="/admin" target="_blank">🔧 Admin Panel</a>
+        <a class="btn" href="/">🏠 Startseite</a>
+      </div>
+    </div>
+    
+    <!-- Level Filter -->
+    <div class="level-filter">
+      <button class="filter-btn active" data-level="all">Alle Niveaus</button>
+      <button class="filter-btn" data-level="A1">A1 - Anfänger</button>
+      <button class="filter-btn" data-level="A2">A2 - Grundkenntnisse</button>
+      <button class="filter-btn" data-level="B1">B1 - Fortgeschritten</button>
+      <button class="filter-btn" data-level="B2">B2 - Selbständig</button>
+    </div>
+    
+    <!-- Kurse Grid -->
+    <div class="courses-grid">
+      <% courses.forEach(course => { %>
+        <div class="course-card" data-level="<%= course.level %>">
+          <div class="course-header">
+            <div>
+              <div class="course-title"><%= course.title %></div>
+              <div class="course-level">Niveau <%= course.level %></div>
+            </div>
+            <span class="pill"><%= course.code %></span>
+          </div>
+          
+          <div class="course-description">
+            <%= course.description || 'Lerne die Grundlagen der deutschen Sprache Schritt für Schritt.' %>
+          </div>
+          
+          <div class="course-meta">
+            <div class="course-stats">
+              <span>📚 <%= course.lessons_count || 0 %> Lektionen</span>
+              <span>⏱️ ~<%= Math.round((course.lessons_count || 1) * 15) %> Min</span>
+            </div>
+            <a href="/dashboard/courses/<%= course.id %>" class="btn btn-success">🚀 Starten</a>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+    
+    <!-- Info Box -->
+    <div class="card">
+      <h3>💡 Wie funktioniert das?</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px">
+        <div>
+          <h4>📚 Kurs auswählen</h4>
+          <p>Wähle einen Kurs aus, der zu deinem Niveau passt (A1 für Anfänger bis B2 für Fortgeschrittene).</p>
+        </div>
+        <div>
+          <h4>📖 Lektionen lesen</h4>
+          <p>Lies alle Lektionen in deinem eigenen Tempo. Du brauchst keinen WhatsApp Bot dafür!</p>
+        </div>
+        <div>
+          <h4>📝 Übungen lösen</h4>
+          <p>Löse interaktive Übungen nach jeder Lektion, um dein Wissen zu festigen.</p>
+        </div>
+        <div>
+          <h4>🤖 WhatsApp Bot (optional)</h4>
+          <p>Falls du Fragen hast oder weitergehen möchtest, kannst du den WhatsApp Bot nutzen.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Level Filter Funktionalität
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Aktiven Button markieren
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const level = btn.dataset.level;
+        const courses = document.querySelectorAll('.course-card');
+        
+        courses.forEach(course => {
+          if (level === 'all' || course.dataset.level === level) {
+            course.style.display = 'block';
+          } else {
+            course.style.display = 'none';
+          }
+        });
+      });
+    });
+    
+    // Smooth Scroll für Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
+</body>
+</html>

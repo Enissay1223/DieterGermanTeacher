@@ -76,10 +76,15 @@ function systemPrompt(userLanguage, userLevel, trainingData) {
 
 class AIService {
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
-    this.router = new SmartAPIRouter(this.openai, process.env.MISTRAL_API_KEY);
+    this.isLocalTest = process.env.NODE_ENV === 'development' || !process.env.OPENAI_API_KEY;
+    
+    if (!this.isLocalTest) {
+      this.openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+      this.router = new SmartAPIRouter(this.openai, process.env.MISTRAL_API_KEY);
+    }
+    
     this.training = '';
     this.loadTrainingData();
   }
@@ -105,6 +110,29 @@ class AIService {
       };
     }
 
+    if (this.isLocalTest) {
+      // Lokaler Test-Modus: Einfache Antworten
+      const responses = [
+        "Hallo! Ich bin dein Deutschlehrer. Wie kann ich dir heute helfen?",
+        "Das ist eine sehr gute Frage! Lass mich dir das erklären...",
+        "Perfekt! Du machst große Fortschritte im Deutschen.",
+        "Kannst du das nochmal auf Deutsch sagen?",
+        "Sehr gut! Du verwendest die Grammatik korrekt."
+      ];
+      
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      
+      // Aktualisiere Nutzer-Statistiken
+      await updateLastActive(phoneNumber);
+      await addExperiencePoints(phoneNumber, 10);
+      
+      return {
+        text: randomResponse,
+        meta: { complexity: 'simple', model: 'local-test' }
+      };
+    }
+
+    // Normale OpenAI-Funktionalität
     await updateLastActive(phoneNumber);
     const context = { language: user.preferred_language || 'english', level: user.german_level || 'A1' };
     const complexity = this.router.analyzeComplexity(userMessage);
@@ -116,12 +144,19 @@ class AIService {
     const content = await this.router.callAPI(messages, selected);
 
     let points = 10;
-    if (selected.provider === 'openai' && selected.model === 'gpt-4o-mini') points = 15;
-    if (selected.provider === 'openai' && selected.model === 'gpt-4o') points = 20;
-    await addExperiencePoints(phoneNumber, points, 'conversation');
+    if (complexity === 'complex') points = 25;
+    else if (complexity === 'medium') points = 15;
+
+    await addExperiencePoints(phoneNumber, points);
     await saveLesson(phoneNumber, {
-      type: 'conversation', content: userMessage, userResponse: userMessage, aiFeedback: content,
-      points, isCorrect: true, level: context.level, grammarTopic: 'conversation'
+      type: 'conversation',
+      content: userMessage,
+      userResponse: userMessage,
+      aiFeedback: content,
+      points: points,
+      isCorrect: true,
+      difficulty: complexity,
+      grammarTopic: 'conversation'
     });
 
     return { text: content, meta: { complexity, model: selected } };

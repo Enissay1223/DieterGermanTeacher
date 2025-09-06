@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>💳 Billing-System - Admin Panel</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;background:#f5f5f5}
+    .container{max-width:1200px;margin:0 auto;padding:20px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:20px;margin-bottom:20px}
+    .btn{display:inline-block;background:#007bff;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;margin-right:8px;margin-bottom:8px}
+    .btn-success{background:#28a745}
+    .btn-warning{background:#ffc107;color:#000}
+    .btn-danger{background:#dc3545}
+    .muted{color:#666}
+    .pill{display:inline-block;padding:2px 10px;border-radius:14px;background:#e9ecef;margin-left:8px;font-weight:600}
+    .billing-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0}
+    .subscription-card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:20px;border-left:4px solid #28a745;margin-bottom:15px}
+    .subscription-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+    .subscription-plan{font-size:1.2em;font-weight:600;color:#333}
+    .subscription-status{font-size:0.9em;color:#666}
+    .subscription-dates{color:#666;font-size:0.9em;margin-bottom:10px}
+    .subscription-price{font-size:1.5em;font-weight:bold;color:#28a745}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin:20px 0}
+    .stat-card{text-align:center;padding:15px;background:#f8f9fa;border-radius:8px}
+    .stat-number{font-size:2em;font-weight:bold;color:#007bff}
+    .stat-label{color:#666;font-size:0.9em}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="card">
+      <h1>💳 Billing-System - Abonnements & Rechnungen</h1>
+      <p class="muted">Verwalte alle Abonnements, Rechnungen und Zahlungen</p>
+      <div>
+        <a class="btn" href="/admin">⬅️ Zurück zum Admin Panel</a>
+        <a class="btn" href="/admin/content?password=test123">📚 Inhaltsverwaltung</a>
+        <a class="btn" href="/dashboard/courses" target="_blank">👨‍🎓 Schüler-Interface testen</a>
+      </div>
+    </div>
+    
+    <!-- Billing Statistiken -->
+    <div class="card">
+      <h2>📊 Billing Übersicht</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number"><%= students.filter(s => s.subscription_status === 'active').length %></div>
+          <div class="stat-label">Aktive Abos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= students.filter(s => s.subscription_status === 'inactive').length %></div>
+          <div class="stat-label">Inaktive Nutzer</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= students.filter(s => s.subscription_plan === 'basic').length %></div>
+          <div class="stat-label">Basic Pläne</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= students.filter(s => s.subscription_plan === 'premium').length %></div>
+          <div class="stat-label">Premium Pläne</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="billing-grid">
+      <!-- Neues Abonnement erstellen -->
+      <div class="card">
+        <h3>🚀 Neues Abonnement erstellen</h3>
+        <form id="subscriptionForm">
+          <div style="margin-bottom:15px">
+            <label><strong>Schüler auswählen:</strong></label>
+            <select name="user_id" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;margin-top:5px">
+              <% students.forEach(student => { %>
+                <option value="<%= student.id %>">
+                  <%= student.name || 'Unbekannt' %> (<%= student.phone_number %>) - <%= student.subscription_status || 'kein Abo' %>
+                </option>
+              <% }); %>
+            </select>
+          </div>
+          
+          <div style="margin-bottom:15px">
+            <label><strong>Plan auswählen:</strong></label>
+            <select name="plan" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;margin-top:5px">
+              <option value="basic">Basic Plan - 19,99€/Monat</option>
+              <option value="premium">Premium Plan - 29,99€/Monat</option>
+            </select>
+          </div>
+          
+          <div style="margin-bottom:15px">
+            <label><strong>Laufzeit (Monate):</strong></label>
+            <select name="months" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;margin-top:5px">
+              <option value="1">1 Monat</option>
+              <option value="3">3 Monate</option>
+              <option value="6">6 Monate</option>
+              <option value="12">12 Monate (Jahresabo)</option>
+            </select>
+          </div>
+          
+          <button type="submit" class="btn btn-success">✅ Abonnement erstellen</button>
+        </form>
+      </div>
+      
+      <!-- Abonnement-Pläne Info -->
+      <div class="card">
+        <h3>💡 Abonnement-Pläne</h3>
+        <div style="margin-bottom:20px">
+          <h4>🔵 Basic Plan - 19,99€/Monat</h4>
+          <ul style="margin:10px 0;padding-left:20px">
+            <li>Zugang zu allen A1-B2 Kursen</li>
+            <li>Interaktive Übungen</li>
+            <li>WhatsApp Bot Support</li>
+            <li>Fortschritts-Tracking</li>
+            <li>E-Mail Support</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4>⭐ Premium Plan - 29,99€/Monat</h4>
+          <ul style="margin:10px 0;padding-left:20px">
+            <li>Alle Basic Features</li>
+            <li>Persönlicher Tutor (1x pro Woche)</li>
+            <li>Zertifikat nach Kursabschluss</li>
+            <li>Prioritäts-Support</li>
+            <li>Exklusive Premium-Inhalte</li>
+          </ul>
+        </div>
+        
+        <div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:8px">
+          <h4>💰 Rabatte</h4>
+          <p><strong>3 Monate:</strong> 5% Rabatt</p>
+          <p><strong>6 Monate:</strong> 10% Rabatt</p>
+          <p><strong>12 Monate:</strong> 20% Rabatt</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bestehende Abonnements -->
+    <div class="card">
+      <h3>📋 Aktive Abonnements</h3>
+      <% 
+        const activeSubscriptions = students.filter(s => s.subscription_status === 'active');
+        if (activeSubscriptions.length === 0) { 
+      %>
+        <p class="muted">Noch keine aktiven Abonnements vorhanden.</p>
+      <% } else { %>
+        <div>
+          <% activeSubscriptions.forEach(student => { %>
+            <div class="subscription-card">
+              <div class="subscription-header">
+                <div>
+                  <div class="subscription-plan"><%= student.name || 'Unbekannt' %></div>
+                  <div class="subscription-status"><%= student.phone_number %></div>
+                </div>
+                <span class="pill" style="background:#28a745;color:white"><%= student.subscription_plan || 'basic' %></span>
+              </div>
+              
+              <div class="subscription-dates">
+                <strong>Abonnement läuft bis:</strong> 
+                <%= student.subscription_expires ? new Date(student.subscription_expires).toLocaleDateString('de-DE') : 'Unbekannt' %>
+              </div>
+              
+              <div class="subscription-price">
+                <%= student.subscription_plan === 'premium' ? '29,99€' : '19,99€' %> / Monat
+              </div>
+              
+              <div style="margin-top:15px">
+                <button class="btn btn-warning" onclick="extendSubscription(<%= student.id %>)">⏰ Verlängern</button>
+                <button class="btn btn-danger" onclick="cancelSubscription(<%= student.id %>)">❌ Kündigen</button>
+                <button class="btn" onclick="generateInvoice(<%= student.id %>)">📄 Rechnung</button>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+    
+    <!-- Rechnungsverwaltung -->
+    <div class="card">
+      <h3>📄 Rechnungsverwaltung</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px">
+        <div>
+          <h4>📊 Rechnungsstatistiken</h4>
+          <p><strong>Offene Rechnungen:</strong> 0</p>
+          <p><strong>Überfällige Rechnungen:</strong> 0</p>
+          <p><strong>Diesen Monat generiert:</strong> 0</p>
+        </div>
+        
+        <div>
+          <h4>🔧 Rechnungsaktionen</h4>
+          <button class="btn" onclick="generateMonthlyInvoices()">📅 Monatliche Rechnungen</button>
+          <button class="btn" onclick="sendPaymentReminders()">📧 Zahlungserinnerungen</button>
+        </div>
+        
+        <div>
+          <h4>💳 Zahlungsmethoden</h4>
+          <p>✅ PayPal</p>
+          <p>✅ Kreditkarte</p>
+          <p>✅ SEPA-Lastschrift</p>
+          <p>✅ Banküberweisung</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Abonnement erstellen
+    document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      data.user_id = parseInt(data.user_id);
+      data.months = parseInt(data.months);
+      
+      try {
+        const response = await fetch('/admin/billing/subscriptions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          alert('✅ Abonnement erfolgreich erstellt!');
+          location.reload();
+        } else {
+          alert('❌ Fehler: ' + result.error);
+        }
+      } catch (error) {
+        alert('❌ Fehler beim Erstellen des Abonnements');
+      }
+    });
+    
+    // Abonnement verlängern
+    function extendSubscription(userId) {
+      const months = prompt('Wie viele Monate verlängern?', '1');
+      if (months && !isNaN(months)) {
+        // Hier würde die Verlängerungslogik implementiert
+        alert('⏰ Verlängerung wird implementiert...');
+      }
+    }
+    
+    // Abonnement kündigen
+    function cancelSubscription(userId) {
+      if (confirm('Sicher, dass du dieses Abonnement kündigen möchtest?')) {
+        // Hier würde die Kündigungslogik implementiert
+        alert('❌ Kündigung wird implementiert...');
+      }
+    }
+    
+    // Rechnung generieren
+    function generateInvoice(userId) {
+      // Hier würde die Rechnungsgenerierung implementiert
+      alert('📄 Rechnung wird generiert...');
+    }
+    
+    // Monatliche Rechnungen
+    function generateMonthlyInvoices() {
+      // Hier würde die monatliche Rechnungsgenerierung implementiert
+      alert('📅 Monatliche Rechnungen werden generiert...');
+    }
+    
+    // Zahlungserinnerungen
+    function sendPaymentReminders() {
+      // Hier würde das Senden von Zahlungserinnerungen implementiert
+      alert('📧 Zahlungserinnerungen werden gesendet...');
+    }
+  </script>
+</body>
+</html>

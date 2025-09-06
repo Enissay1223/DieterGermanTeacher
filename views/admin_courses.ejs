@@ -1,24 +1,86 @@
-<%- include('layout', { title: 'Kurse', body: `
-  <div class=\"card\"><h1>📚 Kursverwaltung</h1>
-    <a class=\"btn\" href=\"/admin\">⬅️ Zurück</a>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>📚 Kursverwaltung - Deutschlehrer Bot</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;background:#f5f5f5}
+    .container{max-width:1200px;margin:0 auto;padding:20px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:20px;margin-bottom:20px}
+    .btn{display:inline-block;background:#007bff;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;margin-right:8px}
+    .muted{color:#666}
+    .pill{display:inline-block;padding:2px 10px;border-radius:14px;background:#e9ecef;margin-left:8px;font-weight:600}
+    textarea{width:100%;height:200px;padding:10px;border:1px solid #ddd;border-radius:5px;font-family:monospace}
+    input[type="password"]{width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;margin-bottom:10px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>📚 Kursverwaltung</h1>
+      <a class="btn" href="/admin">⬅️ Zurück zum Admin Panel</a>
+      <a class="btn" href="/">🏠 Startseite</a>
+    </div>
+    
+    <div class="card">
+      <h3>📥 Kurse importieren (JSON Array)</h3>
+      <form method="post" action="/admin/courses/import"> 
+        <input name="password" type="password" placeholder="Admin-Passwort (test123)" required />
+        <br/><br/>
+        <textarea name="payload" placeholder='[{"code":"A1-01","level":"A1","title":"Einführung in Deutsch","description":"Grundlagen der deutschen Sprache"},{"code":"A1-02","level":"A1","title":"Begrüßungen","description":"Hallo, Guten Tag, Auf Wiedersehen"}]'></textarea>
+        <br/><br/>
+        <button class="btn" type="submit">🚀 Importieren / Aktualisieren</button>
+      </form>
+    </div>
+    
+    <div class="card">
+      <h3>📋 Verfügbare Kurse (<%= courses.length %>)</h3>
+      <% if (courses.length === 0) { %>
+        <p class="muted">Noch keine Kurse vorhanden. Importiere welche über das Formular oben.</p>
+      <% } else { %>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:15px">
+          <% courses.forEach(c => { %>
+            <div style="border:1px solid #eee;padding:15px;border-radius:8px;background:#fafafa">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <strong><%= c.code %></strong>
+                <span class="pill"><%= c.level %></span>
+              </div>
+              <h4 style="margin:0 0 10px 0;color:#333"><%= c.title %></h4>
+              <% if (c.description) { %>
+                <p style="margin:0;color:#666;font-size:14px"><%= c.description %></p>
+              <% } %>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+    
+    <div class="card">
+      <h3>💡 Beispiel-JSON für Import</h3>
+      <pre style="background:#f8f9fa;padding:15px;border-radius:5px;overflow-x:auto;font-size:12px">[
+  {
+    "code": "A1-01",
+    "level": "A1",
+    "title": "Einführung in Deutsch",
+    "description": "Alphabet, Aussprache, erste Wörter"
+  },
+  {
+    "code": "A1-02", 
+    "level": "A1",
+    "title": "Begrüßungen & Vorstellung",
+    "description": "Hallo, ich heiße..., woher kommst du?"
+  },
+  {
+    "code": "A2-01",
+    "level": "A2", 
+    "title": "Alltagssituationen",
+    "description": "Einkaufen, Restaurant, Transport"
+  }
+]</pre>
+    </div>
   </div>
-  <div class=\"card\">
-    <h3>Import (JSON Array)</h3>
-    <form method=\"post\" action=\"/admin/courses/import\"> 
-      <input name=\"password\" type=\"password\" placeholder=\"Admin-Passwort\" required />
-      <br/><br/>
-      <textarea name=\"payload\" style=\"width:100%;height:200px\" placeholder='[{"code":"A1-01","level":"A1","title":"Einführung"}]'></textarea>
-      <br/>
-      <button class=\"btn\" type=\"submit\">Importieren / Aktualisieren</button>
-    </form>
-  </div>
-  <div class=\"card\">
-    <h3>Veröffentlichte Kurse (<%= courses.length %>)</h3>
-    <ul>
-      <% courses.forEach(c => { %>
-        <li><strong><%= c.code %></strong> [<%= c.level %>] - <%= c.title %></li>
-      <% }) %>
-    </ul>
-  </div>
-` }) %>
+</body>
+</html>
 

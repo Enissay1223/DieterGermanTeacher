@@ -2,14 +2,32 @@ const twilio = require('twilio');
 
 class MessageService {
   constructor() {
-    this.client = twilio(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN
-    );
+    this.isLocalTest = process.env.NODE_ENV === 'development' || !process.env.TWILIO_ACCOUNT_SID;
+    
+    if (!this.isLocalTest) {
+      this.client = twilio(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTH_TOKEN
+      );
+    }
   }
 
   async sendMessage(phoneNumber, message) {
     try {
+      if (this.isLocalTest) {
+        // Im lokalen Test-Modus nur loggen
+        console.log(`📱 [LOKAL] Nachricht an ${phoneNumber}:`);
+        if (typeof message === 'string') {
+          console.log(`   ${message}`);
+        } else if (message && typeof message === 'object') {
+          const defaultLang = 'english';
+          const text = message[defaultLang] || message.english || Object.values(message)[0] || 'Nachricht gesendet';
+          console.log(`   ${text}`);
+        }
+        return true;
+      }
+
+      // Normale Twilio-Funktionalität
       if (typeof message === 'string') {
         await this.client.messages.create({
           body: message,

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>📚 Inhaltsverwaltung - Admin Panel</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;background:#f5f5f5}
+    .container{max-width:1200px;margin:0 auto;padding:20px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:20px;margin-bottom:20px}
+    .btn{display:inline-block;background:#007bff;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;margin-right:8px;margin-bottom:8px}
+    .btn-success{background:#28a745}
+    .btn-warning{background:#ffc107;color:#000}
+    .btn-danger{background:#dc3545}
+    .muted{color:#666}
+    .pill{display:inline-block;padding:2px 10px;border-radius:14px;background:#e9ecef;margin-left:8px;font-weight:600}
+    .form-group{margin-bottom:15px}
+    .form-group label{display:block;margin-bottom:5px;font-weight:600}
+    .form-group input,.form-group textarea,.form-group select{width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;font-size:14px}
+    .form-group textarea{min-height:100px;resize:vertical}
+    .content-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .course-item{border:1px solid #eee;padding:15px;border-radius:8px;margin-bottom:15px}
+    .lesson-item{border-left:3px solid #007bff;padding:10px;margin:10px 0;background:#f8f9fa}
+    .exercise-item{border-left:3px solid #28a745;padding:10px;margin:10px 0;background:#f0f8f0}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="card">
+      <h1>📚 Inhaltsverwaltung</h1>
+      <p class="muted">Erstelle und bearbeite Kurse, Lektionen und Übungen</p>
+      <div>
+        <a class="btn" href="/admin">⬅️ Zurück zum Admin Panel</a>
+        <a class="btn" href="/dashboard/courses" target="_blank">👨‍🎓 Schüler-Interface testen</a>
+      </div>
+    </div>
+    
+    <div class="content-grid">
+      <!-- Neuen Kurs erstellen -->
+      <div class="card">
+        <h3>🚀 Neuen Kurs erstellen</h3>
+        <form id="courseForm">
+          <div class="form-group">
+            <label>Kurs-Code:</label>
+            <input type="text" name="code" placeholder="z.B. A1-01" required>
+          </div>
+          <div class="form-group">
+            <label>Niveau:</label>
+            <select name="level" required>
+              <option value="A1">A1 - Anfänger</option>
+              <option value="A2">A2 - Grundlegende Kenntnisse</option>
+              <option value="B1">B1 - Fortgeschrittene Grundkenntnisse</option>
+              <option value="B2">B2 - Selbständige Sprachverwendung</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Titel:</label>
+            <input type="text" name="title" placeholder="z.B. Einführung in Deutsch" required>
+          </div>
+          <div class="form-group">
+            <label>Beschreibung:</label>
+            <textarea name="description" placeholder="Beschreibe den Kurs..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-success">✅ Kurs erstellen</button>
+        </form>
+      </div>
+      
+      <!-- Neue Lektion erstellen -->
+      <div class="card">
+        <h3>📖 Neue Lektion erstellen</h3>
+        <form id="lessonForm">
+          <div class="form-group">
+            <label>Kurs auswählen:</label>
+            <select name="course_id" required>
+              <% courses.forEach(course => { %>
+                <option value="<%= course.id %>"><%= course.code %> - <%= course.title %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Titel der Lektion:</label>
+            <input type="text" name="title" placeholder="z.B. Das Alphabet" required>
+          </div>
+          <div class="form-group">
+            <label>Inhalt:</label>
+            <textarea name="content" placeholder="Der Inhalt der Lektion..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Reihenfolge:</label>
+            <input type="number" name="order_index" value="1" min="1">
+          </div>
+          <button type="submit" class="btn btn-success">✅ Lektion erstellen</button>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Neue Übung erstellen -->
+    <div class="card">
+      <h3>📝 Neue Übung erstellen</h3>
+      <form id="exerciseForm">
+        <div class="form-group">
+          <label>Lektion auswählen:</label>
+          <select name="lesson_id" required>
+            <% courses.forEach(course => { %>
+              <optgroup label="<%= course.code %> - <%= course.title %>">
+                <% if (course.lessons) { %>
+                  <% course.lessons.forEach(lesson => { %>
+                    <option value="<%= lesson.id %>"><%= lesson.title %></option>
+                  <% }); %>
+                <% } %>
+              </optgroup>
+            <% }); %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Typ der Übung:</label>
+          <select name="type" required>
+            <option value="multiple_choice">Multiple Choice</option>
+            <option value="fill_blank">Lückentext</option>
+            <option value="true_false">Richtig/Falsch</option>
+            <option value="matching">Zuordnung</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Frage:</label>
+          <textarea name="question" placeholder="Die Frage für die Übung..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Antwortoptionen (JSON):</label>
+          <textarea name="options" placeholder='["Option A", "Option B", "Option C", "Option D"]'></textarea>
+        </div>
+        <div class="form-group">
+          <label>Richtige Antwort:</label>
+          <input type="text" name="correct_answer" placeholder="Die richtige Antwort" required>
+        </div>
+        <div class="form-group">
+          <label>Erklärung:</label>
+          <textarea name="explanation" placeholder="Warum ist diese Antwort richtig?"></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">✅ Übung erstellen</button>
+      </form>
+    </div>
+    
+    <!-- Bestehende Inhalte anzeigen -->
+    <div class="card">
+      <h3>📋 Bestehende Inhalte</h3>
+      <% courses.forEach(course => { %>
+        <div class="course-item">
+          <h4><%= course.code %> - <%= course.title %></h4>
+          <p class="muted"><%= course.description %></p>
+          <span class="pill"><%= course.level %></span>
+          <span class="pill" style="background:<%= course.is_published ? '#28a745' : '#ffc107' %>;color:<%= course.is_published ? 'white' : 'black' %>">
+            <%= course.is_published ? 'Veröffentlicht' : 'Entwurf' %>
+          </span>
+          
+          <% if (course.lessons && course.lessons.length > 0) { %>
+            <h5>Lektionen:</h5>
+            <% course.lessons.forEach(lesson => { %>
+              <div class="lesson-item">
+                <strong><%= lesson.title %></strong>
+                <span class="pill"><%= lesson.order_index %></span>
+                <p><%= lesson.content %></p>
+                
+                <% if (lesson.exercises && lesson.exercises.length > 0) { %>
+                  <h6>Übungen:</h6>
+                  <% lesson.exercises.forEach(exercise => { %>
+                    <div class="exercise-item">
+                      <strong><%= exercise.question %></strong>
+                      <span class="pill"><%= exercise.type %></span>
+                      <p class="muted">Richtige Antwort: <%= exercise.correct_answer %></p>
+                    </div>
+                  <% }); %>
+                <% } %>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <p class="muted">Noch keine Lektionen vorhanden</p>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+
+  <script>
+    // Kurs erstellen
+    document.getElementById('courseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      
+      try {
+        const response = await fetch('/admin/content/courses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          alert('✅ Kurs erfolgreich erstellt!');
+          location.reload();
+        } else {
+          alert('❌ Fehler: ' + result.error);
+        }
+      } catch (error) {
+        alert('❌ Fehler beim Erstellen des Kurses');
+      }
+    });
+    
+    // Lektion erstellen
+    document.getElementById('lessonForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      data.course_id = parseInt(data.course_id);
+      data.order_index = parseInt(data.order_index);
+      
+      try {
+        const response = await fetch('/admin/content/lessons', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          alert('✅ Lektion erfolgreich erstellt!');
+          location.reload();
+        } else {
+          alert('❌ Fehler: ' + result.error);
+        }
+      } catch (error) {
+        alert('❌ Fehler beim Erstellen der Lektion');
+      }
+    });
+    
+    // Übung erstellen
+    document.getElementById('exerciseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      data.lesson_id = parseInt(data.lesson_id);
+      
+      // JSON für options parsen
+      try {
+        data.options = JSON.parse(data.options);
+      } catch {
+        data.options = [];
+      }
+      
+      try {
+        const response = await fetch('/admin/content/exercises', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          alert('✅ Übung erfolgreich erstellt!');
+          location.reload();
+        } else {
+          alert('❌ Fehler: ' + result.error);
+        }
+      } catch (error) {
+        alert('❌ Fehler beim Erstellen der Übung');
+      }
+    });
+  </script>
+</body>
+</html>

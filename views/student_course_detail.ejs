@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>📚 <%= course.title %> - Deutschlehrer Bot</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;background:#f5f5f5}
+    .container{max-width:1000px;margin:0 auto;padding:20px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:20px;margin-bottom:20px}
+    .btn{display:inline-block;background:#007bff;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;margin-right:8px;margin-bottom:8px}
+    .btn-success{background:#28a745}
+    .btn-warning{background:#ffc107;color:#000}
+    .muted{color:#666}
+    .pill{display:inline-block;padding:2px 10px;border-radius:14px;background:#e9ecef;margin-left:8px;font-weight:600}
+    .course-header{text-align:center;padding:30px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border-radius:15px;margin-bottom:30px}
+    .course-title{font-size:2.5em;margin-bottom:15px}
+    .course-level{font-size:1.2em;opacity:0.9}
+    .course-description{font-size:1.1em;opacity:0.9;max-width:600px;margin:0 auto}
+    .lessons-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin:20px 0}
+    .lesson-card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:20px;border-left:4px solid #007bff;transition:transform 0.2s}
+    .lesson-card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.12)}
+    .lesson-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+    .lesson-title{font-size:1.2em;font-weight:600;color:#333;margin:0}
+    .lesson-order{font-size:0.9em;color:#666}
+    .lesson-content{color:#666;line-height:1.6;margin-bottom:20px}
+    .lesson-actions{display:flex;justify-content:space-between;align-items:center}
+    .lesson-stats{color:#666;font-size:0.9em}
+    .progress-bar{width:100%;height:8px;background:#e9ecef;border-radius:4px;overflow:hidden;margin:10px 0}
+    .progress-fill{height:100%;background:linear-gradient(90deg,#28a745,#20c997);transition:width 0.3s ease}
+    .course-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin:20px 0}
+    .info-card{text-align:center;padding:20px;background:#f8f9fa;border-radius:8px}
+    .info-number{font-size:2em;font-weight:bold;color:#007bff}
+    .info-label{color:#666;font-size:0.9em}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Kurs Header -->
+    <div class="course-header">
+      <h1 class="course-title"><%= course.title %></h1>
+      <div class="course-level">Niveau <%= course.level %> • <%= course.code %></div>
+      <p class="course-description"><%= course.description || 'Lerne die Grundlagen der deutschen Sprache Schritt für Schritt.' %></p>
+      <div style="margin-top:20px">
+        <a class="btn" href="/dashboard/courses">⬅️ Zurück zu allen Kursen</a>
+        <a class="btn" href="/admin" target="_blank">🔧 Admin Panel</a>
+      </div>
+    </div>
+    
+    <!-- Kurs Informationen -->
+    <div class="course-info">
+      <div class="info-card">
+        <div class="info-number"><%= course.lessons ? course.lessons.length : 0 %></div>
+        <div class="info-label">Lektionen</div>
+      </div>
+      <div class="info-card">
+        <div class="info-number"><%= Math.round((course.lessons ? course.lessons.length : 1) * 15) %></div>
+        <div class="info-label">Minuten</div>
+      </div>
+      <div class="info-card">
+        <div class="info-number"><%= course.level %></div>
+        <div class="info-label">Niveau</div>
+      </div>
+      <div class="info-card">
+        <div class="info-number">0%</div>
+        <div class="info-label">Fortschritt</div>
+      </div>
+    </div>
+    
+    <!-- Lektionen -->
+    <div class="card">
+      <h2>📖 Lektionen in diesem Kurs</h2>
+      <% if (!course.lessons || course.lessons.length === 0) { %>
+        <p class="muted">Noch keine Lektionen in diesem Kurs vorhanden. Der Admin arbeitet daran!</p>
+      <% } else { %>
+        <div class="lessons-grid">
+          <% course.lessons.forEach((lesson, index) => { %>
+            <div class="lesson-card">
+              <div class="lesson-header">
+                <div class="lesson-title"><%= lesson.title %></div>
+                <span class="pill"><%= lesson.order_index %></span>
+              </div>
+              
+              <div class="lesson-content">
+                <%= lesson.content ? lesson.content.substring(0, 150) + (lesson.content.length > 150 ? '...' : '') : 'Inhalt wird geladen...' %>
+              </div>
+              
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:0%"></div>
+              </div>
+              
+              <div class="lesson-actions">
+                <div class="lesson-stats">
+                  <% if (lesson.exercises && lesson.exercises.length > 0) { %>
+                    📝 <%= lesson.exercises.length %> Übungen
+                  <% } else { %>
+                    📝 Keine Übungen
+                  <% } %>
+                </div>
+                <a href="/dashboard/lessons/<%= lesson.id %>" class="btn btn-success">🚀 Lektion starten</a>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+        
+        <div style="text-align:center;margin-top:30px">
+          <p class="muted">Klicke auf "Lektion starten" um mit dem Lernen zu beginnen!</p>
+        </div>
+      <% } %>
+    </div>
+    
+    <!-- Kurs Navigation -->
+    <div class="card">
+      <h3>🧭 Kurs Navigation</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px">
+        <div>
+          <h4>📚 Vorheriger Kurs</h4>
+          <p class="muted">Kein vorheriger Kurs verfügbar</p>
+        </div>
+        <div>
+          <h4>📚 Nächster Kurs</h4>
+          <p class="muted">Kein nächster Kurs verfügbar</p>
+        </div>
+        <div>
+          <h4>🎯 Empfohlene Kurse</h4>
+          <p class="muted">Basierend auf deinem Fortschritt</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- WhatsApp Bot Integration -->
+    <div class="card">
+      <h3>🤖 WhatsApp Bot Integration</h3>
+      <p>Du kannst den WhatsApp Bot nutzen, um:</p>
+      <ul style="margin:10px 0;padding-left:20px">
+        <li>Fragen zu stellen</li>
+        <li>Lektionen zu wiederholen</li>
+        <li>Übungen zu lösen</li>
+        <li>Deinen Fortschritt zu tracken</li>
+      </ul>
+      <p class="muted">Schreibe einfach "Hallo" an den WhatsApp Bot, um zu starten!</p>
+    </div>
+  </div>
+
+  <script>
+    // Fortschritt simulieren (für Demo-Zwecke)
+    document.querySelectorAll('.progress-fill').forEach((bar, index) => {
+      setTimeout(() => {
+        const progress = Math.random() * 100;
+        bar.style.width = progress + '%';
+      }, index * 200);
+    });
+    
+    // Smooth Scroll für Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
+</body>
+</html>

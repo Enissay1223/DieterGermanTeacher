@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "setup-db": "node setup-database.js"
+    "setup-db": "node setup-database.js",
+    "build": "npm install"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -19,6 +20,6 @@
   },
   
   "engines": {
-    "node": "18.x"
+    "node": "16.x"
   }
 }

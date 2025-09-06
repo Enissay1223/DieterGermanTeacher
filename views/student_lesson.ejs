@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>📖 <%= lesson.title %> - Deutschlehrer Bot</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;background:#f5f5f5}
+    .container{max-width:900px;margin:0 auto;padding:20px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:20px;margin-bottom:20px}
+    .btn{display:inline-block;background:#007bff;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;margin-right:8px;margin-bottom:8px}
+    .btn-success{background:#28a745}
+    .btn-warning{background:#ffc107;color:#000}
+    .muted{color:#666}
+    .pill{display:inline-block;padding:2px 10px;border-radius:14px;background:#e9ecef;margin-left:8px;font-weight:600}
+    .lesson-header{text-align:center;padding:30px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border-radius:15px;margin-bottom:30px}
+    .lesson-title{font-size:2.5em;margin-bottom:15px}
+    .lesson-meta{font-size:1.1em;opacity:0.9}
+    .lesson-content{line-height:1.8;font-size:1.1em;color:#333;margin-bottom:30px}
+    .exercises-section{margin-top:40px}
+    .exercise-card{background:#f8f9fa;border-radius:10px;padding:20px;margin-bottom:20px;border-left:4px solid #28a745}
+    .exercise-question{font-weight:600;color:#333;margin-bottom:15px;font-size:1.1em}
+    .exercise-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:15px 0}
+    .option-btn{background:#fff;border:2px solid #ddd;padding:12px;border-radius:8px;cursor:pointer;transition:all 0.2s;text-align:center}
+    .option-btn:hover{border-color:#007bff;background:#f0f8ff}
+    .option-btn.selected{border-color:#28a745;background:#d4edda}
+    .option-btn.correct{border-color:#28a745;background:#d4edda}
+    .option-btn.incorrect{border-color:#dc3545;background:#f8d7da}
+    .exercise-result{display:none;margin-top:15px;padding:15px;border-radius:8px}
+    .result-correct{background:#d4edda;border:1px solid #c3e6cb;color:#155724}
+    .result-incorrect{background:#f8d7da;border:1px solid #f5c6cb;color:#721c24}
+    .exercise-explanation{background:#fff3cd;border:1px solid #ffeaa7;color:#856404;padding:15px;border-radius:8px;margin-top:15px}
+    .navigation{display:flex;justify-content:space-between;align-items:center;margin-top:30px}
+    .progress-indicator{text-align:center;margin:20px 0}
+    .progress-bar{width:100%;height:10px;background:#e9ecef;border-radius:5px;overflow:hidden;margin:10px 0}
+    .progress-fill{height:100%;background:linear-gradient(90deg,#28a745,#20c997);transition:width 0.3s ease;width:0%}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Lektion Header -->
+    <div class="lesson-header">
+      <h1 class="lesson-title"><%= lesson.title %></h1>
+      <div class="lesson-meta">
+        📚 Lektion <%= lesson.order_index || 1 %> • 
+        📝 <%= lesson.exercises ? lesson.exercises.length : 0 %> Übungen
+      </div>
+      <div style="margin-top:20px">
+        <a class="btn" href="/dashboard/courses">⬅️ Zurück zu allen Kursen</a>
+        <a class="btn" href="/admin" target="_blank">🔧 Admin Panel</a>
+      </div>
+    </div>
+    
+    <!-- Lektionsinhalt -->
+    <div class="card">
+      <h2>📖 Lektionsinhalt</h2>
+      <div class="lesson-content">
+        <%= lesson.content || 'Der Inhalt dieser Lektion wird geladen...' %>
+      </div>
+      
+      <!-- Fortschritt -->
+      <div class="progress-indicator">
+        <p><strong>Fortschritt dieser Lektion:</strong></p>
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <p class="muted">0% abgeschlossen</p>
+      </div>
+    </div>
+    
+    <!-- Übungen -->
+    <% if (lesson.exercises && lesson.exercises.length > 0) { %>
+      <div class="exercises-section">
+        <h2>📝 Übungen</h2>
+        <p class="muted">Löse die folgenden Übungen, um dein Wissen zu festigen!</p>
+        
+        <% lesson.exercises.forEach((exercise, index) => { %>
+          <div class="exercise-card" id="exercise-<%= exercise.id %>">
+            <div class="exercise-question">
+              <strong>Übung <%= index + 1 %>:</strong> <%= exercise.question %>
+            </div>
+            
+            <% if (exercise.options && exercise.options.length > 0) { %>
+              <div class="exercise-options">
+                <% exercise.options.forEach((option, optIndex) => { %>
+                  <button class="option-btn" 
+                          data-exercise="<%= exercise.id %>" 
+                          data-option="<%= option %>"
+                          onclick="selectOption(this, '<%= exercise.id %>', '<%= option %>')">
+                    <%= option %>
+                  </button>
+                <% }); %>
+              </div>
+            <% } else { %>
+              <div style="margin:15px 0">
+                <input type="text" 
+                       id="answer-<%= exercise.id %>" 
+                       placeholder="Deine Antwort..." 
+                       style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:16px">
+              </div>
+            <% } %>
+            
+            <button class="btn btn-success" 
+                    onclick="submitAnswer('<%= exercise.id %>', '<%= exercise.type %>')"
+                    style="margin-top:15px">
+              ✅ Antwort überprüfen
+            </button>
+            
+            <!-- Ergebnis anzeigen -->
+            <div class="exercise-result" id="result-<%= exercise.id %>"></div>
+            
+            <!-- Erklärung anzeigen -->
+            <% if (exercise.explanation) { %>
+              <div class="exercise-explanation" id="explanation-<%= exercise.id %>" style="display:none">
+                <strong>💡 Erklärung:</strong> <%= exercise.explanation %>
+              </div>
+            <% } %>
+          </div>
+        <% }); %>
+        
+        <!-- Übungen abgeschlossen -->
+        <div class="card" id="completion-card" style="display:none;text-align:center;background:#d4edda;border:1px solid #c3e6cb">
+          <h3>🎉 Alle Übungen abgeschlossen!</h3>
+          <p>Du hast alle Übungen dieser Lektion erfolgreich gelöst.</p>
+          <div style="margin-top:20px">
+            <a href="/dashboard/courses" class="btn btn-success">🏠 Zurück zu den Kursen</a>
+            <button class="btn" onclick="continueToNextLesson()">➡️ Nächste Lektion</button>
+          </div>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="card">
+        <h3>📝 Keine Übungen verfügbar</h3>
+        <p class="muted">Diese Lektion hat noch keine Übungen. Der Admin arbeitet daran!</p>
+      </div>
+    <% } %>
+    
+    <!-- Navigation -->
+    <div class="navigation">
+      <a href="/dashboard/courses" class="btn">⬅️ Zurück zu den Kursen</a>
+      <button class="btn btn-success" onclick="markLessonComplete()">✅ Lektion als abgeschlossen markieren</button>
+    </div>
+    
+    <!-- WhatsApp Bot Integration -->
+    <div class="card">
+      <h3>🤖 WhatsApp Bot Integration</h3>
+      <p>Hast du Fragen zu dieser Lektion? Schreibe dem WhatsApp Bot!</p>
+      <ul style="margin:10px 0;padding-left:20px">
+        <li>"Erkläre mir <%= lesson.title %> nochmal"</li>
+        <li>"Ich verstehe nicht, was bedeutet..."</li>
+        <li>"Kannst du mir eine Übung zu <%= lesson.title %> geben?"</li>
+      </ul>
+      <p class="muted">Der Bot hilft dir gerne weiter und passt sich deinem Niveau an!</p>
+    </div>
+  </div>
+
+  <script>
+    let completedExercises = 0;
+    const totalExercises = <%= lesson.exercises ? lesson.exercises.length : 0 %>;
+    
+    // Option auswählen (für Multiple Choice)
+    function selectOption(button, exerciseId, option) {
+      // Alle Optionen zurücksetzen
+      document.querySelectorAll(`[data-exercise="${exerciseId}"]`).forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      
+      // Gewählte Option markieren
+      button.classList.add('selected');
+    }
+    
+    // Antwort überprüfen
+    async function submitAnswer(exerciseId, exerciseType) {
+      let answer;
+      
+      if (exerciseType === 'multiple_choice') {
+        const selectedBtn = document.querySelector(`[data-exercise="${exerciseId}"].selected`);
+        if (!selectedBtn) {
+          alert('Bitte wähle eine Antwort aus!');
+          return;
+        }
+        answer = selectedBtn.dataset.option;
+      } else {
+        const input = document.getElementById(`answer-${exerciseId}`);
+        if (!input.value.trim()) {
+          alert('Bitte gib eine Antwort ein!');
+          return;
+        }
+        answer = input.value.trim();
+      }
+      
+      try {
+        // Für Demo-Zwecke simulieren wir die Antwort
+        const isCorrect = Math.random() > 0.3; // 70% Erfolgsrate für Demo
+        
+        showExerciseResult(exerciseId, isCorrect, answer);
+        
+        if (isCorrect) {
+          completedExercises++;
+          updateProgress();
+        }
+        
+        // Erklärung anzeigen
+        const explanation = document.getElementById(`explanation-${exerciseId}`);
+        if (explanation) {
+          explanation.style.display = 'block';
+        }
+        
+        // Alle Übungen abgeschlossen?
+        if (completedExercises === totalExercises) {
+          showCompletionCard();
+        }
+        
+      } catch (error) {
+        alert('Fehler beim Überprüfen der Antwort');
+      }
+    }
+    
+    // Ergebnis anzeigen
+    function showExerciseResult(exerciseId, isCorrect, answer) {
+      const resultDiv = document.getElementById(`result-${exerciseId}`);
+      const resultClass = isCorrect ? 'result-correct' : 'result-incorrect';
+      const resultText = isCorrect ? '✅ Richtig!' : '❌ Falsch!';
+      
+      resultDiv.className = `exercise-result ${resultClass}`;
+      resultDiv.innerHTML = `
+        <strong>${resultText}</strong><br>
+        Deine Antwort: "${answer}"
+      `;
+      resultDiv.style.display = 'block';
+      
+      // Buttons deaktivieren
+      document.querySelectorAll(`[data-exercise="${exerciseId}"]`).forEach(btn => {
+        btn.disabled = true;
+        if (isCorrect) {
+          btn.classList.add('correct');
+        } else {
+          btn.classList.add('incorrect');
+        }
+      });
+    }
+    
+    // Fortschritt aktualisieren
+    function updateProgress() {
+      const progress = (completedExercises / totalExercises) * 100;
+      document.querySelector('.progress-fill').style.width = progress + '%';
+      document.querySelector('.progress-indicator p:last-child').textContent = `${Math.round(progress)}% abgeschlossen`;
+    }
+    
+    // Abschlusskarte anzeigen
+    function showCompletionCard() {
+      document.getElementById('completion-card').style.display = 'block';
+    }
+    
+    // Lektion als abgeschlossen markieren
+    function markLessonComplete() {
+      alert('✅ Lektion erfolgreich als abgeschlossen markiert!');
+      // Hier würde die Logik implementiert, um den Fortschritt zu speichern
+    }
+    
+    // Zur nächsten Lektion
+    function continueToNextLesson() {
+      alert('➡️ Navigation zur nächsten Lektion wird implementiert...');
+    }
+    
+    // Fortschritt simulieren (für Demo-Zwecke)
+    setTimeout(() => {
+      updateProgress();
+    }, 500);
+  </script>
+</body>
+</html>
